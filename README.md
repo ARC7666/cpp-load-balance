@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./images/architecture.png" alt="Architecture Diagram" width="600"/>
+  <img src="./images/architecture.png?v=2" alt="Architecture Diagram" width="600"/>
   <h1>C++ Asynchronous Layer 4 Load Balancer</h1>
   <p>
     <strong>A high-performance, single-threaded Layer 4 proxy utilizing Linux <code>epoll</code> for non-blocking I/O event multiplexing.</strong>
