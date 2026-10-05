@@ -39,25 +39,7 @@ This project tackles the **C10k problem** by implementing a single-threaded, eve
 
 ---
 
-## Performance Benchmarks
 
-To validate the architecture, the load balancer was benchmarked against an industry-standard **Nginx Reverse Proxy**. 
-
-**Test Conditions:**
-*   **Environment:** Ubuntu 22.04 (1 vCPU, 2GB RAM)
-*   **Backends:** Python Flask (TCP) and Echo (UDP) performing blocking CPU operations.
-
-### Latency Comparison (TCP)
-
-| Workload | Backend Nodes | Nginx | Custom L4 Balancer |
-| :--- | :---: | :---: | :---: |
-| **10 Requests** | 2 | 1.57s | **1.60s** |
-| **100 Requests** | 2 | 15.99s | **16.12s** |
-| **300 Requests** | 2 | 47.61s | **49.83s** |
-
-**Architectural Takeaway:** At low-to-medium concurrency, this single-threaded proxy performs on par with Nginx. Under extreme burst loads (10,000+ simultaneous connections), Nginx's advanced queue management yielded a 100% success rate, whereas this custom implementation experienced packet drops (57% success rate) due to socket buffer exhaustion. This serves as a practical demonstration of TCP backlog limits and socket tuning requirements at scale.
-
----
 
 ## Getting Started
 
