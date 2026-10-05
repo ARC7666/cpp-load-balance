@@ -1,68 +1,97 @@
-# C++ Layer 4 Load Balancer
+<div align="center">
+  <img src="./images/architecture.png" alt="Architecture Diagram" width="600"/>
+  <h1>C++ Asynchronous Layer 4 Load Balancer</h1>
+  <p>
+    <strong>A high-performance, single-threaded L4 proxy utilizing Linux <code>epoll</code> for non-blocking I/O event multiplexing.</strong>
+  </p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Language-C++11-00599C.svg?logo=c%2B%2B" alt="Language" />
+    <img src="https://img.shields.io/badge/Platform-Linux-FCC624.svg?logo=linux" alt="Platform" />
+    <img src="https://img.shields.io/badge/Protocol-TCP%20%7C%20UDP-green.svg" alt="Protocol" />
+  </p>
+</div>
 
-A high-performance, single-threaded Layer 4 (Transport Layer) Load Balancer built in C++. This project demonstrates advanced Linux systems programming, utilizing `epoll` for highly concurrent, non-blocking I/O event multiplexing to distribute TCP and UDP traffic efficiently across multiple backend servers.
+<br />
 
-## 🚀 Key Features
+## 📖 Overview
 
-- **Protocol Agnostic L4 Routing**: Seamlessly handles and routes both TCP and UDP traffic.
-- **Single-Threaded Event Loop**: Employs a non-blocking architecture using Linux's `epoll` (level-triggered) API. This avoids the overhead, race conditions, and context-switching penalties associated with multi-threaded architectures, allowing it to handle thousands of concurrent connections (similar to the C10k problem solution used by Nginx and Redis).
-- **Dynamic Component Registration**: Backend servers can dynamically register and unregister themselves with the load balancer via a dedicated control channel utilizing Msgpack.
-- **Health Checking**: Built-in 5-second interval health checks to ensure traffic is only routed to healthy backend nodes.
-- **Round-Robin Load Balancing**: Evenly distributes incoming client requests across available servers to optimize resource utilization and maximize throughput.
+Traditional load balancers and web servers often rely on multi-threaded or multi-process architectures, leading to overhead in context switching, race conditions, and synchronization locks. 
 
-## 🧠 Architecture Overview
+This project tackles the **C10k problem** by implementing a **single-threaded, event-driven architecture**. By wrapping the Linux `epoll` API (level-triggered), it multiplexes thousands of non-blocking TCP and UDP sockets on a single thread. This approach mirrors the underlying architectures of industry titans like **Nginx** and **Redis**.
 
-Unlike traditional threaded servers where one thread handles one client, this load balancer relies entirely on asynchronous sockets multiplexed onto a single event loop.
+## ✨ Core Features
 
-1. **Control Channel**: A TCP socket listens for backend servers to register themselves. They provide their IP, protocol (TCP/UDP), and the port they want the load balancer to expose.
-2. **Dynamic Binding**: When a server registers, the load balancer dynamically creates and binds a new socket to listen for incoming client traffic on the requested relay port.
-3. **Traffic Relay**: As client packets arrive, `epoll` triggers a read event. The load balancer reads the packet, determines the next healthy backend server via Round-Robin, and forwards the payload.
+*   **⚡ Protocol Agnostic (L4)**: Seamlessly proxies and balances both connection-oriented (TCP) and connectionless (UDP) traffic.
+*   **🔄 Zero-Thread Architecture**: Achieves extreme concurrency using non-blocking sockets and `epoll`, virtually eliminating CPU context-switching penalties.
+*   **🔌 Dynamic Component Registration**: Backend microservices can dynamically connect, register, and deregister via a dedicated Msgpack control channel.
+*   **🩺 Active Health Monitoring**: Performs scheduled health checks (5s intervals) to immediately evict failing backend nodes from the routing pool.
+*   **⚖️ Round-Robin Distribution**: Deterministic traffic distribution across all healthy backend nodes for optimal resource utilization.
 
-## 📊 Performance & Benchmarking
+---
 
-To validate the architecture, the load balancer was benchmarked against an industry-standard **Nginx** reverse proxy using custom Python load-testing scripts.
+## 🏗️ Architecture & Control Flow
 
-### Test Environment
-- Backends: Python Flask Servers (TCP) and Python Echo Servers (UDP)
-- Workload: Heavy CPU loops on the backend to simulate blocking operations.
+1.  **Control Channel Binding**: The Load Balancer opens a primary control TCP socket.
+2.  **Dynamic Registration**: Backend nodes (Flask APIs, UDP servers) connect to the control port, transmitting a Msgpack payload specifying their target relay ports.
+3.  **Port Allocation**: The Load Balancer dynamically binds the requested public-facing relay ports and adds them to the `epoll` watch list.
+4.  **Traffic Forwarding**: Upon client connection, `epoll` triggers a read event. The Load Balancer ingests the packet, selects the next healthy node (Round-Robin), and relays the payload completely asynchronously.
 
-### Results summary:
-- **Low/Medium Concurrency**: At lower concurrent request rates (up to 300 concurrent requests), this custom load balancer performed competitively, occasionally matching or slightly edging out Nginx response times (e.g., 100 requests across 2 servers: Nginx at 15.99s, Custom LB at 16.12s).
-- **High Concurrency Burst Limits**: During extreme burst tests (10,000 simultaneous TCP connections), the single-threaded nature hit its buffering limits, dropping packets to a ~57% success rate compared to Nginx's robust connection queuing. *This served as an excellent case study in TCP backlog queues, socket buffering limits, and advanced connection tracking.*
+---
 
-## 🛠️ Tech Stack & Dependencies
+## 📊 Performance Benchmarks (vs. Nginx)
 
-- **Language**: C/C++ (C++11+)
-- **Systems Concepts**: Socket Programming, POSIX APIs, Linux `epoll`
-- **Build System**: Make
-- **Testing & Tooling**: Python 3.10+, Flask, Msgpack
+The load balancer was rigorously benchmarked against an industry-standard **Nginx Reverse Proxy**. 
 
-## 💻 Getting Started
+**Test Conditions:**
+*   **Environment:** Ubuntu 22.04 (1 vCPU, 2GB RAM)
+*   **Backends:** Python Flask (TCP) & Echo (UDP) performing blocking CPU loops (`for i in range(1, 5000000): count += i`).
 
-### 1. Build the Load Balancer
+### Latency Comparison (TCP)
+
+| Workload | Backend Nodes | Nginx (Seconds) | Custom L4 Balancer (Seconds) |
+| :--- | :---: | :---: | :---: |
+| **10 Requests** | 2 | 1.57s | **1.60s** |
+| **100 Requests** | 2 | 15.99s | **16.12s** |
+| **300 Requests** | 2 | 47.61s | **49.83s** |
+
+> **Architectural Takeaway**: At low-to-medium concurrency, this single-threaded proxy performs on par with Nginx. Under extreme burst loads (10,000+ simultaneous connections), Nginx's superior queue management yielded a 100% success rate, whereas this custom implementation experienced packet drops (57% success rate) due to socket buffer exhaustion—a textbook demonstration of TCP backlog limits.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+*   `g++` (C++11 or higher)
+*   `make`
+*   `python3` (for test servers/clients)
+
+### 1. Build and Run the Load Balancer
 ```bash
+# Compile the project
 make
-./lander [CONTROL_PORT]
+
+# Run on a specified control port (e.g., 9988)
+./lander 9988
 ```
 
-### 2. Run Backend Servers (in separate terminals)
-Ensure you have the required python packages (`pip install flask requests msgpack`).
+### 2. Launch Backend Servers
+*Requires: `pip install flask requests msgpack`*
 
 ```bash
 cd clients
-# Start a TCP (Flask) Server (binds to 30000 locally, requests Load Balancer to relay on 50000)
-python3 api_server.py 127.0.0.1 [CONTROL_PORT] 30000 50000
 
-# Start a UDP Echo Server (binds to 17000 locally, requests Load Balancer to relay on 20000)
-python3 udp_server.py 127.0.0.1 [CONTROL_PORT] 17000 20000
+# Start a TCP backend (Local Port: 30000, Requesting LB to expose: 50000)
+python3 api_server.py 127.0.0.1 9988 30000 50000
+
+# Start a UDP backend (Local Port: 17000, Requesting LB to expose: 20000)
+python3 udp_server.py 127.0.0.1 9988 17000 20000
 ```
 
-### 3. Run Load Tests
+### 3. Execute Load Tests
 ```bash
 cd clients
-# TCP Test (100 concurrent requests)
+
+# Simulate 100 concurrent TCP clients hitting the exposed port
 python3 dummy_client.py 127.0.0.1 50000 100
-
-# UDP Test (100 concurrent requests)
-python3 udp_dummy_client.py 127.0.0.1 20000 100
 ```
