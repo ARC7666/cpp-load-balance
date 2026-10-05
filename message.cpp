@@ -1,3 +1,7 @@
+/**
+ * Message Parsing Utility
+ * Helper functions for parsing Msgpack payloads from the control channel.
+ */
 #include "message.hpp"
 
 #include <iostream>
@@ -13,7 +17,6 @@ Message::~Message()
 }
 
 /**
- * 아직 이용가능한 바이트가 남아있음을 확인
 */
 int Message::Parse(int len)
 {

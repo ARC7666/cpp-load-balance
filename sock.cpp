@@ -1,3 +1,7 @@
+/**
+ * Socket Implementations
+ * Wraps non-blocking reads/writes and handles socket lifecycle state.
+ */
 #include "sock.hpp"
 #include "epoll_event.hpp"
 
@@ -141,7 +145,6 @@ Net::TcpSocket::TcpSocket(SockAddr *adr, int _mask, socket_t fd)
     this->mask = _mask;
 }
 
-/* socket_nread를 사용하여 얼마큼 읽을 수 있는지 확인 */
 int Net::TcpSocket::ReadSocket()
 {
     if(socket_nread(fd, &querylen) == -1)
@@ -202,7 +205,6 @@ int Net::TcpSocket::ConnectSocket()
     {
         if(errno == 115)
         {
-            /* non block socket이여서 뜸 반복문으로 정상적으로 연결되었는지 확인필요 */
             int error; 
             socklen_t len = sizeof(error);
             if( getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len) < 0 ) 
@@ -264,7 +266,6 @@ Net::UdpSocket::UdpSocket(SockAddr *adr, int _mask, socket_t fd)
 }
 
 /**
- * 데이터를 SOCKET_BUFFER만큼 읽음 
 */
 int Net::UdpSocket::ReadSocket()
 {

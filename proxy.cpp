@@ -1,3 +1,8 @@
+/**
+ * Epoll Event Loop & Proxy Engine
+ * The core event loop using epoll to multiplex thousands of non-blocking sockets.
+ * Dispatches read/write events to the respective TCP/UDP proxy handlers.
+ */
 #include "proxy.hpp"
 #include "balancer.hpp"
 #include "tcp_proxy.hpp"
@@ -24,10 +29,8 @@ Proxy::Proxy()
     
 }
 
-// bind목록 컴포넌트 목록등 확인하여 제거 필요
 int Proxy::DeleteSocket(Net::Socket *socket)
 {
-    // bind 목록에서 먼저 제거
     if(socket->sock_type == SockType::BalancerProxyClient)
     {
         // call bm->DeleteBind();
@@ -143,8 +146,6 @@ void Proxy::ProcessEvent(int retval)
         /* EPOLLERR */
         /**
          * NOTE! 
-         * 연결이 끊어졌을 경우 컴포넌트 리스트에서 삭제
-         * 현재 바인드하고 있는 포트 레퍼런스 제거
         */
         if(e.mask != EPOLLIN)
         {
@@ -154,10 +155,8 @@ void Proxy::ProcessEvent(int retval)
         }
 
         /* EPOLLIN */
-        /* 이벤트가 발생한 socket에서 어떤 이벤트가 발생했는지 확인 필요 */
         switch(socket->sock_type)
         {
-            /* 컴포넌트 소켓 추가 */
             case SockType::BalancerProxyServer:
             {
                 if(tcp_proxy->TcpClientAccept((Net::TcpSocket*)socket, SockType::BalancerProxyClient) == C_ERR)
@@ -169,7 +168,6 @@ void Proxy::ProcessEvent(int retval)
                 break;
             }
 
-            /* 컴포넌트의 메시지 처리 */
             case SockType::BalancerProxyClient:
             {
                 int err; 
@@ -190,7 +188,6 @@ void Proxy::ProcessEvent(int retval)
                 break;
             }
 
-            /* 연결된 TCP 서버로 릴레이 */
             case SockType::TcpProxyServer:
             {
                 if(tcp_proxy->TcpClientAccept((Net::TcpSocket*)socket, SockType::TcpProxyClient) == C_ERR)
@@ -201,7 +198,6 @@ void Proxy::ProcessEvent(int retval)
                 break;
             }
 
-            /* 컴포넌트에 접근하기를 원하는 외부 요청 */
             case SockType::TcpProxyClient:
             {   
                 int ret = tcp_proxy->TcpSendToRealServer(socket);
@@ -218,9 +214,6 @@ void Proxy::ProcessEvent(int retval)
                 break;
             }
 
-            /* 처음 요청한 클라이언트에게 전달 */
-            /* 이때 socket은 API 서버에 연결한 socket */
-            /* connection_pair_fd는 로드밸런서에 연결 시도한 사용자 */
             case SockType::TcpRelayClient:
             {
                 int ret = tcp_proxy->TcpSendToClient((Net::TcpSocket *)socket);
@@ -246,8 +239,6 @@ void Proxy::ProcessEvent(int retval)
                 break;
             }
 
-            /* 연결된 UDP 서버로 릴레이 */
-            /* UDP는 클라이언트없이 여기서 바로 하는 듯 */
             case SockType::UdpProxyServer:
             {
                 int ret = udp_proxy->UdpSendToRealServer((Net::UdpSocket*)socket);
@@ -258,7 +249,6 @@ void Proxy::ProcessEvent(int retval)
                 break;
             }
 
-            /* 컴포넌트에 접근하기를 원하는 외부 요청 */
             case SockType::UdpProxyClient:
             {
                 int ret = udp_proxy->UdpSendToClient((Net::UdpSocket*)socket);

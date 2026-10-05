@@ -1,3 +1,8 @@
+/**
+ * Balancer Core Logic
+ * Processes control channel commands (register, unregister, health checks).
+ * Dynamically maps incoming request ports to backend relay sockets.
+ */
 #include "balancer.hpp"
 #include "common.hpp"
 #include <iostream>
@@ -55,7 +60,6 @@ json BalancerProxy::Controller(const json &req)
         {"error", ErrorCode::None},
     }; 
 
-    /* 유효성 검사 */
     ErrorCode result = Verify(req);
     if(result != ErrorCode::None)
     {
@@ -106,11 +110,9 @@ json BalancerProxy::Controller(const json &req)
  * {"cmd": "register", "protocol", "tcp", "port": 80, "relay_port" : 8000}
 */
 /**
- * 넘겨받은 port, 넘겨받은 주소 쌍 만들기 == (port, IPEndpoint)
 */
 ErrorCode BalancerProxy::RegisterComponent(std::string protocol, int port, int relay_port)
 {
-    /* protocol과 port 겹치는거 있는지 확인 */
     ErrorCode err;
     Net::Socket *bind_socket; 
     std::tie(err, bind_socket) = bm->AddBind(protocol, port, socket->fd, relay_port);
@@ -119,10 +121,8 @@ ErrorCode BalancerProxy::RegisterComponent(std::string protocol, int port, int r
         return err;
     }
 
-    /* 이미 protocol과 port가 겹친다면 */
     if(bind_socket != nullptr)
     {
-        /* bind까지 했지만 epoll 등록이 실패한다면 bind목록 롤백 */
         if(el->AddEvent(bind_socket) == C_ERR)
         {
             bm->DeleteBind(bind_socket->fd);
@@ -135,7 +135,6 @@ ErrorCode BalancerProxy::RegisterComponent(std::string protocol, int port, int r
 }
 
 /**
- * {"ack": "successful"} or {"ack": "failed", "msg": "…"}
 */
 ErrorCode BalancerProxy::UnRegisterComponent(std::string protocol, int port, int relay_port)
 {

@@ -1,9 +1,9 @@
 LDLIBS = -lpthread
 
-all: lander
+all: nexus_proxy
 
-lander: main.o sock.o epoll_event.o udp_proxy.o tcp_proxy.o balancer.o component.o proxy.o message.o
-	g++ -o lander main.o sock.o epoll_event.o tcp_proxy.o udp_proxy.o balancer.o component.o proxy.o message.o $(LDLIBS)
+nexus_proxy: main.o sock.o epoll_event.o udp_proxy.o tcp_proxy.o balancer.o component.o proxy.o message.o
+	g++ -o nexus_proxy main.o sock.o epoll_event.o tcp_proxy.o udp_proxy.o balancer.o component.o proxy.o message.o $(LDLIBS)
 
 main.o: main.hpp main.cpp 
 	g++ -c -g -o main.o main.cpp
@@ -33,4 +33,4 @@ message.o: message.hpp message.cpp
 	g++ -c -g -o message.o message.cpp
 
 clean: 
-	rm *.o lander
+	rm *.o nexus_proxy

@@ -51,9 +51,6 @@ for i in range(0, round):
         fail += 1
 
 per = (suc / round) * 100
-print("성공률 : {0}%".format(per))
-print("성공 횟수 : {0}".format(suc))
-print("실패 횟수 : {0}".format(fail))
     
 end = time.time()
 

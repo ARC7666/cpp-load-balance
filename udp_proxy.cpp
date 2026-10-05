@@ -1,3 +1,7 @@
+/**
+ * UDP Proxy Implementation
+ * Handles stateless connection relaying for UDP backend components.
+ */
 #include "udp_proxy.hpp"
 #include <iostream>
 
@@ -8,8 +12,6 @@ UdpProxy::UdpProxy(Epoll::EventLoop *el, BindManager *bm)
 }
 
 /**
- * 컴포넌트가 바인딩한 포트로 클라이언트가 접근한다면 클라이언트의 데이터를 읽는다.
- * 그리고 새로 소켓을 만들어 실제 서버로 전송한다. 
  * 
 */
 int UdpProxy::UdpSendToRealServer(Net::UdpSocket *comp_socket)
@@ -75,7 +77,6 @@ int UdpProxy::UdpSendToRealServer(Net::UdpSocket *comp_socket)
 }
 
 /**
- * 실제 서버로부터 데이터가 도착한다면 처음 접속을 시도한 클라이언트에게 전달한다. 
 */
 int UdpProxy::UdpSendToClient(Net::UdpSocket *relay_socket)
 {

@@ -69,7 +69,7 @@ To validate the architecture, the load balancer was benchmarked against an indus
 ### 1. Build and Run the Load Balancer
 ```bash
 make
-./lander 9988
+./nexus_proxy 9988
 ```
 
 ### 2. Launch Backend Servers
@@ -92,3 +92,8 @@ cd clients
 # Simulate 100 concurrent TCP clients hitting the exposed port
 python3 dummy_client.py 127.0.0.1 50000 100
 ```
+
+---
+
+## Acknowledgments
+The architectural foundation and baseline benchmarking tests for this project were inspired by and adapted from the original works of [txuna](https://github.com/txuna).

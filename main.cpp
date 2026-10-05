@@ -1,3 +1,7 @@
+/**
+ * Entry Point
+ * Parses arguments and initializes the Load Balancer proxy engine.
+ */
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -16,7 +20,7 @@ int main(int argc, char **argv)
 {
     if(argc != 2)
     {
-        std::cerr<<"./lander needs two argument."<<std::endl;
+        std::cerr<<"./nexus_proxy needs two argument."<<std::endl;
         return 1;
     }
     

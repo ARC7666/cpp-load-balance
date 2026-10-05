@@ -1,3 +1,7 @@
+/**
+ * Balancer Definitions
+ * Defines the control interface for backend node dynamic registration.
+ */
 #ifndef __BALANCER_PROXY_H_
 #define __BALANCER_PROXY_H_
 
@@ -8,10 +12,8 @@
 
 
 
-/* 연결된 컴포넌트는 tcp_proxy나 udp_proxy에서 접근할 수 있어야 함 */
 
 /**
- * 연결된 컴포넌트와의 register, unregister, health check 기능 수행
 */
 class BalancerProxy
 {

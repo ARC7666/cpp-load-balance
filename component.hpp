@@ -1,3 +1,8 @@
+/**
+ * Component Management Definitions
+ * Defines structures for maintaining active backend servers, tracking their health,
+ * and organizing them by bound relay ports for load balancing.
+ */
 #ifndef __COMPONENT_H_
 #define __COMPONENT_H_
 
@@ -12,8 +17,6 @@
 
 /**
  * NOTE! 
- * 전체 컴포넌트 리스트와 컴포넌트별로 사용중인 binding port들에 대한 관리 필요
- * binding port는 참조하는 레퍼런스의 갯수 체크 필요 0이 될 시 해당 포트 close
 */
 
 class Component
@@ -30,11 +33,10 @@ class Component
 class BindComponent
 {
     private:
-        /* Control Channel은 TCP 연결이기 때문에 연결유지되어 있다면 언제든지 getpeername으로 주소정보 가지고 올 수 있음*/
-        std::vector<Component*> comps;   /* 바인딩 소켓으로부터 릴레이 해줄 컴포넌트 리스트 */
+        std::vector<Component*> comps;   
         int port;
         std::string protocol;
-        Net::Socket *bind_socket = nullptr; /* 새로 바인딩된 소켓 */
+        Net::Socket *bind_socket = nullptr; 
         int index = 0;
 
     public:

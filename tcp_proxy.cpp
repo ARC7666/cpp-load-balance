@@ -1,3 +1,8 @@
+/**
+ * TCP Proxy Implementation
+ * Handles client connection acceptance and data relaying between
+ * external clients and internal backend components.
+ */
 #include "tcp_proxy.hpp"
 #include <iostream>
 #include <errno.h>
@@ -9,7 +14,6 @@ TcpProxy::TcpProxy(Epoll::EventLoop *el, BindManager *bm)
 }
 
 /**
- * 컴포넌트가 바인드한 포트로 접근을 요청한 클라이언트의 소켓을 만든다. 
 */
 int TcpProxy::TcpClientAccept(Net::TcpSocket *socket, int sock_type)
 {
@@ -31,7 +35,6 @@ int TcpProxy::TcpClientAccept(Net::TcpSocket *socket, int sock_type)
 }
 
 /**
- * 클라이언트의 데이터를 읽고 새로 소켓을 만들고 실제 TCP서버로 접속을 하고 데이터를 전송한다. 
 */
 int TcpProxy::TcpSendToRealServer(Net::Socket *socket)
 {
@@ -46,7 +49,7 @@ int TcpProxy::TcpSendToRealServer(Net::Socket *socket)
         return C_ERR;
     }
 
-    Net::SockAddr *addr = new Net::SockAddr(comp->addr); /* 서버의 주소 정보 */
+    Net::SockAddr *addr = new Net::SockAddr(comp->addr); 
     Net::TcpSocket *relay_socket = new Net::TcpSocket(addr, EPOLLIN | EPOLLHUP | EPOLLRDHUP | EPOLLERR);
 
     if(relay_socket->CreateSocket(SockType::TcpRelayClient, SOCK_STREAM) == C_ERR)
@@ -95,7 +98,6 @@ int TcpProxy::TcpSendToRealServer(Net::Socket *socket)
 }
 
 /**
- * 실제 서버로 전송된 데이터가 도착한다면 처음 접속을 시도한 클라이언트 소켓에게 데이털르 전달한다. 
 */
 int TcpProxy::TcpSendToClient(Net::TcpSocket *socket)
 {

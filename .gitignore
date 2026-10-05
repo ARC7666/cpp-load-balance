@@ -13,4 +13,5 @@ app
 server
 script
 *.rdb
-lander 
+nexus_proxy 
+INTERVIEW_PREP.*

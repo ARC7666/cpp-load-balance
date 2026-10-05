@@ -1,3 +1,8 @@
+/**
+ * Component Management Implementation
+ * Implements the Round-Robin selection algorithm and manages the lifecycle
+ * of registered backend servers within the routing pool.
+ */
 #include "component.hpp"
 #include <errno.h>
 
@@ -170,7 +175,6 @@ BindManager::BindManager()
 
 BindManager::~BindManager()
 {
-    /* 모든 bind 요소 delete */
     for(BindComponent *bc: binds)
     {
         // need to unbind 
@@ -182,7 +186,6 @@ BindManager::~BindManager()
 
 std::tuple<ErrorCode, Net::Socket*> BindManager::AddBind(std::string protocol, int port, socket_t fd, int relay_port)
 {
-    // 이미 동일한 fd로 바인드되고 있는지 확인
     for(BindComponent *bc: binds)
     {
         if(bc->HasComponent(fd) == true)
@@ -192,7 +195,6 @@ std::tuple<ErrorCode, Net::Socket*> BindManager::AddBind(std::string protocol, i
     }
 
     BindComponent *bc = LoadBindComponent(protocol, port);
-    // 이미 해당 포트와 프로토콜로 바인딩 되고 있다면 
     if(bc != nullptr)
     {
         bc->AppendComponent(fd, relay_port);
@@ -212,23 +214,19 @@ std::tuple<ErrorCode, Net::Socket*> BindManager::AddBind(std::string protocol, i
         bind_socket = new_bc->BindUdpSocket(port, fd, relay_port);
     }
 
-    /* socket bind실패시 바인드 목록 삭제 */
     if(bind_socket == nullptr)
     {
         delete new_bc;
         return std::make_tuple(ErrorCode::BindError, nullptr);
     }
 
-    /* 바인드 목록에 추가 */
     binds.push_back(new_bc);
 
     return std::make_tuple(ErrorCode::None, bind_socket);
 }
 
-/* 인자로 주어진 fd를 지우고 bindcomponent의 fds의 길이가 0이라면 바인딩 제거 */
 std::tuple<ErrorCode, Net::Socket *> BindManager::DeleteBind(socket_t fd)
 {
-    /* fds의 사이즈가 0이 된다면 해당 바인드 삭제 */
     for(BindComponent *bc: binds)
     {
         if(bc->HasComponent(fd) == true)

@@ -1,3 +1,7 @@
+/**
+ * Epoll Wrapper
+ * Abstracts Linux epoll system calls for event loop creation and management.
+ */
 #include "epoll_event.hpp"
 #include <iostream>
 #include <errno.h>
